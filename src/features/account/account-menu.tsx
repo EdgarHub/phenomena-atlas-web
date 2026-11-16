@@ -2,6 +2,7 @@ import { getViewer } from "@/lib/api/server";
 import { displayName } from "./display-name";
 import { RoleBadge } from "./role-badge";
 import { SignInLink } from "./sign-in-link";
+import { SignUpLink } from "./sign-up-link";
 import { SignOutButton } from "./sign-out-button";
 import styles from "./account.module.css";
 
@@ -10,7 +11,7 @@ export async function AccountMenu() {
   const viewer = await getViewer();
 
   if (viewer.state === "anonymous") {
-    return <SignInLink />;
+    return <><SignInLink /><SignUpLink /></>;
   }
   if (viewer.state === "expired") {
     return <SignInLink label="Sign in again" />;
