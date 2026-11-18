@@ -43,6 +43,29 @@ test("an anonymous visitor is sent to sign in and comes back to the accounts", a
   await expect(page.getByTestId("signed-in-as")).toContainText("Admin");
 });
 
+test("a new visitor can sign up and comes back signed in", async ({ page }) => {
+  // Keycloak rejects duplicates, so every run registers a different person.
+  const username = `signup${Date.now()}`;
+  const password = "Sup3r-secret-pw";
+
+  await page.goto("/");
+  await page.getByRole("banner").getByRole("link", { name: "Sign up" }).click();
+
+  // Keycloak's registration form, not its login form.
+  await expect(page.locator("#password-confirm")).toBeVisible();
+  await page.locator("#username").fill(username);
+  await page.locator("#email").fill(`${username}@example.test`);
+  await page.locator("#firstName").fill("Sign");
+  await page.locator("#lastName").fill("Up");
+  await page.locator("#password").fill(password);
+  await page.locator("#password-confirm").fill(password);
+  await page.getByRole("button", { name: "Register" }).click();
+
+  // Back in the web app, signed in with the default role.
+  await expect(page.getByTestId("signed-in-as")).toContainText("Sign Up");
+  await expect(page.getByTestId("signed-in-as")).toContainText("User");
+});
+
 test("a user is told the page needs the admin role", async ({ page }) => {
   await page.goto("/");
   await signInFromHeader(page, "dev");
