@@ -302,7 +302,8 @@ async function editProfile(request: IncomingMessage, response: ServerResponse, a
     firstName: body.firstName,
     lastName: body.lastName,
     name: `${body.firstName} ${body.lastName}`,
-    email: body.email,
+    // Keycloak keeps emails in lower case.
+    email: body.email.toLowerCase(),
   };
   return send(response, 200, entry.account);
 }

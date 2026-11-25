@@ -19,7 +19,8 @@ export function profileFailureCopy(error: RequestFailed): string {
     case "account_not_found":
       return "This account no longer exists. Reload the page.";
     case "unauthorized":
-      return "Your session has expired. Sign in again.";
+      // The form puts a link to sign in again after it.
+      return "Your session has expired.";
     case "forbidden":
       return "You are not allowed to change these details.";
     default:

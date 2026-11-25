@@ -66,6 +66,30 @@ test("someone edits their own details and the header shows the new name", async 
   await expect(page.getByTestId("signed-in-as")).toContainText("Devon Edited");
 });
 
+test("the form shows the details as they were saved", async ({ page }) => {
+  await page.goto("/account");
+  await logInAtKeycloak(page, "dev");
+
+  await fillDetails(page, { email: "  Devon@Example.TEST " });
+  await page.getByRole("button", { name: "Save" }).click();
+
+  await expect(page.getByText("Details saved.")).toBeVisible();
+  await expect(page.getByLabel("Email")).toHaveValue("devon@example.test");
+});
+
+test("an expired session is told to sign in again", async ({ page }) => {
+  await page.goto("/account");
+  await logInAtKeycloak(page, "dev");
+  await failNextEdit({ status: 401, code: "unauthorized" });
+
+  await fillDetails(page, { firstName: "Devon" });
+  await page.getByRole("button", { name: "Save" }).click();
+
+  const alert = page.getByTestId("account-form").getByRole("alert");
+  await expect(alert).toHaveText("Your session has expired. Sign in again");
+  await expect(alert.getByRole("link", { name: "Sign in again" })).toBeVisible();
+});
+
 test("the header name leads to the account page", async ({ page }) => {
   await page.goto("/account");
   await logInAtKeycloak(page, "dev");

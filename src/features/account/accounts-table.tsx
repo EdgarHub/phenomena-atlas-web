@@ -181,12 +181,13 @@ function AccountRow({ account, isMe, api, queryKey }: { account: Account; isMe: 
         ) : editing ? (
           <ProfileForm
             testId="account-edit-form"
-            initial={{ firstName: account.firstName ?? "", lastName: account.lastName ?? "", email: account.email ?? "" }}
+            account={account}
             save={async (values) => {
               const updated = await call(() =>
                 api.PUT("/accounts/{accountId}/profile", { params: { path: { accountId: account.id } }, body: values }),
               );
               replaceAccount(queryClient, queryKey, updated);
+              return updated;
             }}
             onSaved={() => setEditing(false)}
             onCancel={() => setEditing(false)}

@@ -1,22 +1,23 @@
 "use client";
 
-import { useId, useState, type FormEvent } from "react";
+import type { components } from "@quetzalsoft/phenomena-atlas-contract";
+import { useId, useState, type ChangeEvent, type FormEvent } from "react";
 import ui from "@/components/ui.module.css";
 import { RequestFailed } from "@/lib/api/request";
 import { profileFailureCopy } from "./profile-failure";
 import { SignInLink } from "./sign-in-link";
 import styles from "./account.module.css";
 
-export interface ProfileValues {
-  firstName: string;
-  lastName: string;
-  email: string;
-}
+type Account = components["schemas"]["Account"];
+type ProfileValues = components["schemas"]["AccountProfile"];
 
 interface ProfileFormProps {
-  initial: ProfileValues;
-  /** Writes the details. Throws RequestFailed when the API refuses or cannot be reached. */
-  save: (values: ProfileValues) => Promise<void>;
+  account: Account;
+  /**
+   * Writes the details and answers the account as the API saved it. Throws RequestFailed when
+   * the API refuses or cannot be reached.
+   */
+  save: (values: ProfileValues) => Promise<Account>;
   /** Called after a successful save, such as to close the form. */
   onSaved?: () => void;
   onCancel?: () => void;
@@ -24,9 +25,9 @@ interface ProfileFormProps {
 }
 
 /** First name, last name and email, saved together: either all of them change or none does. */
-export function ProfileForm({ initial, save, onSaved, onCancel, testId }: ProfileFormProps) {
+export function ProfileForm({ account, save, onSaved, onCancel, testId }: ProfileFormProps) {
   const id = useId();
-  const [values, setValues] = useState(initial);
+  const [values, setValues] = useState(() => valuesOf(account));
   const [pending, setPending] = useState(false);
   const [saved, setSaved] = useState(false);
   const [failure, setFailure] = useState<RequestFailed | undefined>();
@@ -34,7 +35,7 @@ export function ProfileForm({ initial, save, onSaved, onCancel, testId }: Profil
   const field = (name: keyof ProfileValues) => ({
     id: `${id}-${name}`,
     value: values[name],
-    onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
+    onChange: (event: ChangeEvent<HTMLInputElement>) => {
       setSaved(false);
       setValues((current) => ({ ...current, [name]: event.target.value }));
     },
@@ -54,7 +55,8 @@ export function ProfileForm({ initial, save, onSaved, onCancel, testId }: Profil
     setSaved(false);
     setFailure(undefined);
     try {
-      await save(trimmed);
+      // The identity provider may store a value differently, such as an email in lower case.
+      setValues(valuesOf(await save(trimmed)));
       setSaved(true);
       onSaved?.();
     } catch (error) {
@@ -101,4 +103,8 @@ export function ProfileForm({ initial, save, onSaved, onCancel, testId }: Profil
       )}
     </form>
   );
+}
+
+function valuesOf(account: Account): ProfileValues {
+  return { firstName: account.firstName ?? "", lastName: account.lastName ?? "", email: account.email ?? "" };
 }

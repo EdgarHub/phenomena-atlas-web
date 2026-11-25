@@ -16,11 +16,12 @@ export function AccountDetails({ account }: { account: Account }) {
   return (
     <ProfileForm
       testId="account-form"
-      initial={{ firstName: account.firstName ?? "", lastName: account.lastName ?? "", email: account.email ?? "" }}
+      account={account}
       save={async (values) => {
-        await call(() => api.PUT("/accounts/me/profile", { body: values }));
+        const updated = await call(() => api.PUT("/accounts/me/profile", { body: values }));
         // The header shows the name, and the server renders it: ask for the page again.
         router.refresh();
+        return updated;
       }}
     />
   );
